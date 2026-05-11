@@ -24,30 +24,12 @@ $challenges = $challenges ?? [];
 
         .sidebar {
             width: 320px;
-            background: linear-gradient(180deg, #070b16 0%, #090f1f 100%);
+            background-color: #040608;
             border-right: 1px solid rgba(255,255,255,0.08);
             display: flex;
             flex-direction: column;
-            padding: 32px 24px;
+            padding: 40px 25px;
             position: relative;
-        }
-
-        .logo {
-            margin-bottom: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 60px;
-        }
-
-        .logo-text {
-            font-size: 2.8rem;
-            font-weight: 900;
-            color: #ffffff;
-            text-align: center;
-            margin: 0;
-            letter-spacing: -0.04em;
-            line-height: 1.1;
         }
 
         .menu {
