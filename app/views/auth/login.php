@@ -1,36 +1,10 @@
 <?php
-session_start();
-require '../app/config/db.php';
+// session_start(); // Already started in index.php
 
 // Jika user sudah login, langsung arahkan ke profile
 if (isset($_SESSION['user_id'])) {
-    header("Location: profile.php");
+    header("Location: /profile");
     exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-
-    // Cari user berdasarkan email
-    $result = $conn->query("SELECT * FROM users WHERE email = '$email'");
-    
-    if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-        // Cek kecocokan password
-        if (password_verify($password, $user['password'])) {
-            // Set session
-            $_SESSION['user_id'] = $user['id'];
-            
-            // Arahkan ke halaman profile / challenge
-            header("Location: profile.php");
-            exit;
-        } else {
-            $error = "Kata sandi salah!";
-        }
-    } else {
-        $error = "Email tidak terdaftar!";
-    }
 }
 ?>
 
@@ -56,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             <form method="POST" action="/login" class="auth-form mx-auto max-w-md">
                 <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required class="form-control">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required class="form-control">
                 </div>
                 <div class="form-group">
                     <label for="password">Kata Sandi</label>

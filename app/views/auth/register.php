@@ -1,36 +1,5 @@
 <?php
-session_start();
-require '../app/config/db.php';
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
-
-    if ($password !== $confirm_password) {
-        $error = "Kata sandi tidak cocok!";
-    } else {
-        // Cek apakah email sudah terdaftar
-        $cek_email = $conn->query("SELECT id FROM users WHERE email = '$email'");
-        if ($cek_email->num_rows > 0) {
-            $error = "Email sudah terdaftar!";
-        } else {
-            // Enkripsi password
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            
-            // Simpan ke database
-            $query = "INSERT INTO users (name, email, password) VALUES ('$name', '$email', '$hashed_password')";
-            if ($conn->query($query)) {
-                // Jika sukses, arahkan ke login
-                header("Location: login.php?registered=true");
-                exit;
-            } else {
-                $error = "Terjadi kesalahan sistem.";
-            }
-        }
-    }
-}
+// session_start(); // Already started in index.php
 ?>
 
 <!DOCTYPE html>
@@ -55,12 +24,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             <form method="POST" action="/register" class="auth-form mx-auto max-w-md">
                 <div class="form-group">
-                    <label for="name">Nama Lengkap</label>
-                    <input type="text" id="name" name="name" required class="form-control">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required class="form-control">
                 </div>
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" name="email" required class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role" required class="form-control">
+                        <option value="" disabled selected>Pilih Role</option>
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="password">Kata Sandi</label>

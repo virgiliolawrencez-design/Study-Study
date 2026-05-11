@@ -23,7 +23,12 @@ class Router
     {
         $method = $_SERVER['REQUEST_METHOD'];
         $uri = parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH);
-
+        // Strip base path for subfolder deployment
+        $base = '/Study-Study';
+        if (strpos($uri, $base) === 0) {
+            $uri = substr($uri, strlen($base));
+        }
+        if ($uri === '') $uri = '/';
         foreach ($this->routes as $route) {
             $pattern = str_replace(
                 '{id}',
@@ -32,7 +37,7 @@ class Router
             );
             $pattern = '#^' . $pattern . '$#';
 
-            if (preg_match($pattern, $uri, $matches)) {
+            if ($route['method'] === $method && preg_match($pattern, $uri, $matches)) {
                 array_shift($matches);
                 require_once '../app/controllers/' .$route['controller'] . '.php';
 

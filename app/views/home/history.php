@@ -7,14 +7,14 @@ $history_data = [];
 // Looping dari minggu pertama sampai minggu sebelum current_week
 for ($w = 1; $w < $current_week; $w++) {
     // Total challenge di minggu ke-$w
-    $t_query = $conn->query("SELECT COUNT(*) as count FROM challenges WHERE week_number = $w");
+    $t_query = $conn->query("SELECT COUNT(*) as count FROM challenges WHERE week = $w");
     $total = $t_query->fetch_assoc()['count'];
 
     // Total selesai di minggu ke-$w
     $c_query = $conn->query("
         SELECT COUNT(*) as count FROM user_challenges uc 
         JOIN challenges c ON uc.challenge_id = c.id 
-        WHERE c.week_number = $w AND uc.user_id = $user_id AND uc.status = 'completed'
+        WHERE c.week = $w AND uc.user_id = $user_id AND uc.status = 'completed'
     ");
     $completed = $c_query->fetch_assoc()['count'];
 
@@ -31,24 +31,56 @@ for ($w = 1; $w < $current_week; $w++) {
     <title>StudyTrack - History</title>
     <link rel="stylesheet" href="/css/home.css">
     <style>
-        /* ... STYLE BAWAAN ANDA ... */
         .history-list { display: flex; flex-direction: column; gap: 30px; }
-        .history-card { background: #ffffff; border: 3px solid #000; border-radius: 20px; padding: 25px 35px; display: flex; align-items: center; justify-content: space-between; box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.05); }
-        .progress-mini-outline { width: 90%; height: 40px; background: #eee; border: 3px solid #000; border-radius: 15px; overflow: hidden; }
-        .progress-mini-fill { height: 100%; background: #76ff03; border-right: 3px solid #000; transition: 0.5s; }
-        .arrow-icon { font-size: 2.5rem; cursor: pointer; }
+        .history-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 22px;
+        }
+        .progress-mini-outline {
+            width: 100%;
+            height: 40px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-mini-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff7f11, #ffb36c);
+            transition: width 1s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #111;
+            font-weight: 900;
+            font-size: 1.1rem;
+        }
+        .arrow-icon {
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            color: #ffb36c;
+        }
+        .arrow-icon:hover { transform: scale(1.2); }
     </style>
 </head>
 <body>
 <div class="dashboard-container">
     <aside class="sidebar">
-        <h1 class="logo">StudyTrack</h1>
+        <a href="/" class="logo"><h1 class="logo-text">StudyTrack</h1></a>
         <nav class="menu">
-            <a href="challenge.php" class="menu-item">Challenge</a>
-            <a href="progress.php" class="menu-item">Progress</a>
-            <a href="history.php" class="menu-item active">History</a>
-            <a href="profile.php" class="menu-item">Profile</a>
+            <a href="/challenge" class="menu-item challenge">Challenge</a>
+            <a href="/progress" class="menu-item progress">Progress</a>
+            <a href="/history" class="menu-item history active">History</a>
+            <a href="/profile" class="menu-item profile">Profile</a>
+            <a href="/logout" class="menu-item logout">Logout</a>
         </nav>
+        <div class="sidebar-mascot">
+            <img src="/assets/Image1.png" alt="Mascot">
+        </div>
     </aside>
 
     <main class="main-content">
@@ -56,14 +88,16 @@ for ($w = 1; $w < $current_week; $w++) {
         <div class="history-list">
             
             <?php if(empty($history_data)): ?>
-                <p style="color:white; font-size: 1.2rem;">Belum ada history karena ini masih minggu pertama.</p>
+                <div class="card">
+                    <p style="font-size: 1.2rem; color: #fff;">Belum ada history karena ini masih minggu pertama.</p>
+                </div>
             <?php else: ?>
                 <?php foreach($history_data as $minggu => $persentase): ?>
-                <div class="history-card">
-                    <div class="history-info">
+                <div class="card history-card">
+                    <div class="history-info" style="flex:1;">
                         <label>Progress Minggu <?= $minggu ?></label>
-                        <div class="progress-mini-outline">
-                            <div class="progress-mini-fill" style="width: <?= $persentase ?>%;"></div>
+                        <div class="progress-mini-outline" style="margin-top: 14px;">
+                            <div class="progress-mini-fill" style="width: <?= $persentase ?>%;"><?= $persentase ?>%</div>
                         </div>
                     </div>
                     <div class="arrow-icon">❯</div>

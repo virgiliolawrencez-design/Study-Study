@@ -1,24 +1,11 @@
 <?php
-require '../app/config/db.php';
-
-// Hitung Total Challenge minggu ini
-$total_query = $conn->query("SELECT COUNT(*) as count FROM challenges WHERE week_number = $current_week");
-$total_challenges = $total_query->fetch_assoc()['count'];
-
-// Hitung Challenge yang sudah 'completed' oleh user minggu ini
-$completed_query = $conn->query("
-    SELECT COUNT(*) as count FROM user_challenges uc 
-    JOIN challenges c ON uc.challenge_id = c.id 
-    WHERE c.week_number = $current_week AND uc.user_id = $user_id AND uc.status = 'completed'
-");
-$completed_challenges = $completed_query->fetch_assoc()['count'];
-
-// Hitung persentase
-$progress_percentage = 0;
-if ($total_challenges > 0) {
-    $progress_percentage = round(($completed_challenges / $total_challenges) * 100);
+// session_start(); // Already started in index.php
+if (!isset($_SESSION['user_id'])) {
+    header('Location: /login');
+    exit;
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -26,34 +13,137 @@ if ($total_challenges > 0) {
     <title>StudyTrack - Progress</title>
     <link rel="stylesheet" href="/css/home.css">
     <style>
-        /* ... STYLE BAWAAN ANDA ... */
-        .progress-container { background: white; border: 2px solid #000; border-radius: 25px; padding: 40px; box-shadow: 8px 8px 0px rgba(0,0,0,0.1); }
-        .progress-title { font-weight: 800; font-size: 1.5rem; margin-bottom: 20px; display: block; }
-        .progress-bar-outline { width: 100%; height: 50px; background: #eee; border: 2px solid #000; border-radius: 15px; overflow: hidden; margin-bottom: 25px; }
-        .progress-bar-fill { height: 100%; background: #76ff03; border-right: 2px solid #000; transition: width 0.5s ease-in-out; }
+        .progress-container {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .progress-title {
+            font-weight: 800;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            display: block;
+            color: #fff;
+            text-align: left;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.85);
+            flex-wrap: wrap;
+        }
+
+        .progress-bar-outline {
+            width: 100%;
+            height: 60px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff7f11, #ffb36c);
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #111;
+            font-weight: 900;
+            font-size: 1.2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .progress-text {
+            text-align: left;
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.78);
+            margin-top: 20px;
+        }
+
+        .motivation-text {
+            text-align: left;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffb36c;
+            margin-top: 30px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
 <div class="dashboard-container">
     <aside class="sidebar">
-        <h1 class="logo">StudyTrack</h1>
+        <a href="/" class="logo"><h1 class="logo-text">StudyTrack</h1></a>
         <nav class="menu">
-            <a href="challenge.php" class="menu-item">Challenge</a>
-            <a href="progress.php" class="menu-item active">Progress</a>
-            <a href="history.php" class="menu-item">History</a>
-            <a href="profile.php" class="menu-item">Profile</a>
+            <a href="/challenge" class="menu-item challenge">Challenge</a>
+            <a href="/progress" class="menu-item progress active">Progress</a>
+            <a href="/history" class="menu-item history">History</a>
+            <a href="/profile" class="menu-item profile">Profile</a>
+            <a href="/logout" class="menu-item logout">Logout</a>
         </nav>
+        <div class="sidebar-mascot">
+            <img src="/assets/Image1.png" alt="Mascot">
+        </div>
     </aside>
 
     <main class="main-content">
         <div class="progress-container">
-            <span class="progress-title">Progress Minggu <?= $current_week ?></span>
-            
-            <div class="progress-bar-outline">
-                <div class="progress-bar-fill" style="width: <?= $progress_percentage ?>%;"></div>
+            <span class="progress-title">Progress Minggu <?= htmlspecialchars($current_week) ?></span>
+
+            <div class="progress-stats">
+                <span>Selesai: <?= htmlspecialchars($completed_challenges) ?> / <?= htmlspecialchars($total_challenges) ?></span>
+                <span><?= htmlspecialchars($progress_percentage) ?>%</span>
             </div>
 
-            <p class="progress-text">Kamu telah menyelesaikan <?= $completed_challenges ?> dari <?= $total_challenges ?> challenge (<?= $progress_percentage ?>%).</p>
+            <div class="progress-bar-outline">
+                <div class="progress-bar-fill" style="width: <?= htmlspecialchars($progress_percentage) ?>%;">
+                    <?= htmlspecialchars($progress_percentage) ?>%
+                </div>
+            </div>
+
+            <div class="progress-text">
+                <?php if ($progress_percentage == 100): ?>
+                    🎉 Selamat! Anda telah menyelesaikan semua tantangan minggu ini!
+                <?php elseif ($progress_percentage >= 75): ?>
+                    Hampir selesai! Teruskan kerja bagusnya!
+                <?php elseif ($progress_percentage >= 50): ?>
+                    Bagus! Anda sudah setengah jalan.
+                <?php elseif ($progress_percentage > 0): ?>
+                    Mulai bagus! Lanjutkan tantangan berikutnya.
+                <?php else: ?>
+                    Belum ada tantangan yang diselesaikan. Mulai dari tantangan pertama!
+                <?php endif; ?>
+            </div>
+
+            <div class="motivation-text">
+                "Konsistensi adalah kunci kesuksesan. Tetap semangat!"
+            </div>
         </div>
     </main>
 </div>

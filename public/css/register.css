@@ -116,12 +116,24 @@ body {
     font-weight: 500;
     outline: none;
     transition: all 0.3s ease;
+    appearance: none;
+    cursor: pointer;
 }
 
 .form-control:focus {
     border-color: var(--btn-yellow);
     background: rgba(255, 255, 255, 0.35);
     box-shadow: 0 0 15px rgba(252, 193, 45, 0.2);
+}
+
+/* Style for select placeholder option */
+.form-control option {
+    background: var(--bg-color);
+    color: white;
+}
+
+.form-control option[value=""] {
+    color: rgba(255, 255, 255, 0.6);
 }
 
 /* Di HTML Anda menggunakan <label>, tapi di foto terlihat seperti teks di dalam kotak. 
@@ -137,9 +149,20 @@ body {
     transition: 0.2s ease;
 }
 
+/* For select elements, display label normally */
+.form-group:has(select) label {
+    position: static;
+    transform: none;
+    display: block;
+    margin-bottom: 8px;
+    top: auto;
+    left: auto;
+}
+
 /* Sembunyikan label saat sedang mengetik atau jika kotak sudah terisi */
 .form-group:focus-within label,
-.form-group:has(input:valid) label {
+.form-group:has(input:valid) label,
+.form-group:has(select:valid) label {
     opacity: 0;
     visibility: hidden;
 }

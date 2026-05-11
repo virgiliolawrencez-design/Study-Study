@@ -1,17 +1,23 @@
 <?php
-session_start();
-require '../app/config/db.php';
+// session_start(); // Already started in index.php
+$conn = $GLOBALS['conn'] ?? null;
+
+if (!$conn) {
+    die('Database connection failed');
+}
 
 // Jika belum login, tendang kembali ke halaman login
-if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role'])) {
+    header("Location: /login");
     exit;
 }
 
 $user_id = $_SESSION['user_id'];
+$role = $_SESSION['role'];
+$table = $role . 's'; // teachers or students
 
 // Ambil data spesifik user yang login
-$query = "SELECT name, email FROM users WHERE id = $user_id";
+$query = "SELECT username, email FROM $table WHERE id = $user_id";
 $result = $conn->query($query);
 $user_data = $result->fetch_assoc();
 ?>
@@ -25,46 +31,38 @@ $user_data = $result->fetch_assoc();
     <link rel="stylesheet" href="/css/home.css">
     
     <style>
-        /* --- LAYOUT UTAMA --- */
         .main-content {
             padding: 40px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 25px;
-            /* Background biru otomatis mengikuti style.css bawaan Anda */
         }
 
-        /* --- KOTAK PROFILE (PUTIH CERAH) --- */
         .profile-card {
-            background: #ffffff; /* <-- Ini yang membuat kotaknya putih cerah */
-            border-radius: 20px;
-            padding: 35px;
             width: 100%;
             max-width: 900px;
-            /* Shadow tipis agar kotak sedikit menonjol (opsional) */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); 
         }
 
         .section-title {
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             font-weight: 800;
-            color: #000;
+            color: #ffffff;
             margin-bottom: 25px;
         }
 
-        /* --- BAGIAN HEADER PROFILE --- */
         .profile-header {
             display: flex;
             align-items: center;
             gap: 25px;
             margin-bottom: 25px;
+            flex-wrap: wrap;
         }
 
         .avatar-circle {
             width: 90px;
             height: 90px;
-            background-color: #555; /* Warna lingkaran foto (bisa disesuaikan) */
+            background-color: #2f374e;
             border-radius: 50%;
         }
 
@@ -72,38 +70,38 @@ $user_data = $result->fetch_assoc();
             font-size: 1.6rem;
             font-weight: 800;
             margin-bottom: 5px;
-            color: #000;
+            color: #fff;
         }
 
         .user-info p {
             font-size: 1rem;
-            color: #555;
+            color: rgba(255,255,255,0.78);
         }
 
         .profile-actions {
             display: flex;
             gap: 15px;
+            flex-wrap: wrap;
         }
 
         .btn-outline {
-            background: #ffffff;
-            border: 1px solid #aaa;
-            padding: 8px 15px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.9rem;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid #ff7f11;
+            padding: 12px 22px;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.95rem;
             cursor: pointer;
-            color: #000;
+            color: #ffb36c;
             transition: 0.2s;
         }
 
         .btn-outline:hover {
-            background: #f0f0f0;
+            background: rgba(255,255,255,0.16);
         }
 
-        /* --- BAGIAN NOTIFIKASI EMAIL --- */
         .notif-section {
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
             padding-bottom: 20px;
             margin-bottom: 20px;
         }
@@ -125,7 +123,7 @@ $user_data = $result->fetch_assoc();
             margin-bottom: 15px;
             display: block;
             font-size: 1.05rem;
-            color: #000;
+            color: #fff;
         }
 
         .notif-item {
@@ -134,10 +132,9 @@ $user_data = $result->fetch_assoc();
             align-items: center;
             margin-bottom: 12px;
             font-size: 1rem;
-            color: #222;
+            color: rgba(255,255,255,0.82);
         }
 
-        /* --- TOGGLE SWITCH (SAKLAR) --- */
         .switch {
             position: relative;
             display: inline-block;
@@ -151,9 +148,10 @@ $user_data = $result->fetch_assoc();
             position: absolute;
             cursor: pointer;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #000; /* Hitam saat ON */
+            background-color: #0e1a2d;
             transition: .3s;
             border-radius: 34px;
+            border: 1px solid rgba(255,255,255,0.12);
         }
 
         .slider:before {
@@ -166,9 +164,8 @@ $user_data = $result->fetch_assoc();
             border-radius: 50%;
         }
 
-        /* Abu-abu saat OFF */
         input:not(:checked) + .slider {
-            background-color: #ccc;
+            background-color: rgba(255,255,255,0.1);
         }
         
         input:not(:checked) + .slider:before {
@@ -179,23 +176,24 @@ $user_data = $result->fetch_assoc();
             transform: translateX(22px);
         }
 
-        /* --- BAGIAN DROPDOWN (PER KELAS) --- */
         .dropdown-wrapper {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 18px;
         }
 
         .custom-select {
-            background: #f8f8f8;
-            border: 1px solid #ccc;
-            padding: 8px 15px;
-            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.14);
+            padding: 12px 16px;
+            border-radius: 16px;
             font-weight: 600;
             font-size: 1rem;
             cursor: pointer;
             outline: none;
-            color: #000;
+            color: #fff;
         }
     </style>
 </head>
@@ -203,12 +201,13 @@ $user_data = $result->fetch_assoc();
 
 <div class="dashboard-container">
     <aside class="sidebar">
-        <h1 class="logo">StudyTrack</h1>
+        <a href="/" class="logo"><h1 class="logo-text">StudyTrack</h1></a>
         <nav class="menu">
-            <a href="/challenge" class="menu-item">Challenge</a>
-            <a href="/progress" class="menu-item">Progress</a>
-            <a href="/history" class="menu-item">History</a>
-            <a href="/profile" class="menu-item active">Profile</a>
+            <a href="/challenge" class="menu-item challenge">Challenge</a>
+            <a href="/progress" class="menu-item progress">Progress</a>
+            <a href="/history" class="menu-item history">History</a>
+            <a href="/profile" class="menu-item profile active">Profile</a>
+            <a href="/logout" class="menu-item logout">Logout</a>
         </nav>
         <div class="sidebar-mascot">
             <img src="/assets/Image1.png" alt="Mascot">
@@ -223,8 +222,8 @@ $user_data = $result->fetch_assoc();
             <div class="profile-header">
                 <div class="avatar-circle"></div>
                 <div class="user-info">
-                    <h2>Lawrence Epstein</h2>
-                    <p>lawrence.epstein@gmail.com</p>
+                    <h2><?php echo htmlspecialchars($user_data['username']); ?></h2>
+                    <p><?php echo htmlspecialchars($user_data['email']); ?></p>
                 </div>
             </div>
 

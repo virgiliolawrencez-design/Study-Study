@@ -8,135 +8,347 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    background: #0b1220;
+    color: #eef2ff;
 }
 
 .dashboard-container {
     display: flex;
-    height: 100vh;
-}
-
-/* --- EFEK KERTAS KOTAK-KOTAK (Pattern) --- */
-.graph-paper-light {
-    background-color: #ffffff;;
-    background-size: 20px 20px;
-}
-
-.graph-paper-dark {
-    background-color: #2b5a9e;
-
-    background-size: 25px 25px;
+    min-height: 100vh;
 }
 
 /* --- SIDEBAR --- */
 .sidebar {
-    width: 300px;
-    background-color: #ffffff; /* Warna dasar pinkish/light */
-    border-right: 2px solid #333;
+    width: 320px;
+    background-color: #040608;
+    border-right: 1px solid rgba(255,255,255,0.08);
     display: flex;
     flex-direction: column;
-    padding: 40px 20px;
-    background-size: 20px 20px;
+    padding: 40px 24px;
     position: relative;
 }
 
 .logo {
-    font-size: 2.5rem;
-    font-weight: 900;
-    color: #000;
     margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px;
+}
+
+.logo img {
+    width: 180px;
+    display: block;
+    margin: 0 auto;
+}
+
+.logo-text {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: #ffffff;
+    text-align: center;
+    margin: 0;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
 }
 
 .menu {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 16px;
 }
 
 .menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-decoration: none;
-    color: #000;
+    color: #ffffff;
     font-weight: 700;
-    padding: 15px 25px;
-    border: 2px solid #333;
-    border-radius: 20px;
-    background: #fff;
-    transition: 0.3s;
-    font-size: 1.1rem;
+    padding: 18px 24px;
+    min-height: 64px;
+    width: 100%;
+    border: 1px solid #2563eb;
+    border-radius: 999px;
+    background: #1d4ed8;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    font-size: 1.05rem;
+    box-shadow: 0 12px 24px rgba(37,99,235,0.12);
+}
+
+.menu-item.challenge,
+.menu-item.progress,
+.menu-item.history,
+.menu-item.profile,
+.menu-item.logout {
+    background: #1d4ed8;
+    color: #ffffff;
+    border-color: #2563eb;
 }
 
 .menu-item.active {
-    background: #EAE0CF; /* Krem muda sesuai foto */
+    background: #2563eb;
+    border-color: #3b82f6;
+    box-shadow: 0 12px 24px rgba(37,99,235,0.22);
 }
 
 .menu-item:hover {
-    transform: translateX(5px);
-    box-shadow: 4px 4px 0px #333;
+    transform: translateX(2px);
+    background: #3b82f6;
+    box-shadow: 0 12px 24px rgba(37,99,235,0.15);
 }
 
 .sidebar-mascot {
-    margin-top: auto;
-    text-align: center;
-}
-
-.sidebar-mascot img {
-    width: 200px;
-    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1));
+    display: none;
 }
 
 /* --- MAIN CONTENT --- */
 .main-content {
     flex: 1;
-    background-color: #2b5a9e; /* Biru sesuai foto */
-    background-size: 30px 30px;
-    padding: 50px;
+    position: relative;
+    background: linear-gradient(180deg, #0c1325 0%, #12223e 100%);
+    padding: 55px 55px 35px;
     overflow-y: auto;
 }
 
-.section-title {
-    font-size: 3rem;
-    font-weight: 900;
-    color: #000;
-    margin-bottom: 30px;
+.main-content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    pointer-events: none;
 }
 
-.challenge-list {
+.section-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin-bottom: 18px;
+    line-height: 1.05;
+}
+
+.top-section p {
+    color: rgba(255,255,255,0.87);
+    margin-top: 10px;
+    font-size: 1.1rem;
+    max-width: 700px;
+}
+
+.card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 28px;
+    padding: 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 18px 30px rgba(0,0,0,0.20);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 22px 40px rgba(0,0,0,0.25);
+}
+
+.card-title,
+.card h2,
+.card h3,
+.card h4 {
+    color: #ffffff;
+}
+
+.card p,
+.card span,
+.card label,
+.card small {
+    color: rgba(255,255,255,0.78);
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 28px;
+    margin-top: 32px;
+}
+
+.btn,
+button,
+input[type="submit"],
+input[type="button"] {
+    padding: 18px 24px;
+    border-radius: 999px;
+    font-weight: 700;
     display: flex;
-    flex-direction: column;
-    gap: 25px;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    border: 1px solid #2563eb;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 1.05rem;
+    min-height: 64px;
+    box-shadow: 0 12px 24px rgba(37,99,235,0.12);
+}
+
+.btn-primary,
+.btn {
+    background: #1d4ed8;
+    color: #ffffff;
+}
+
+.btn-primary:hover,
+.btn:hover {
+    background: #2563eb;
+}
+
+.btn-secondary,
+.btn-outline {
+    background: #1d4ed8;
+    color: #ffffff;
+}
+
+.btn-secondary:hover,
+.btn-outline:hover {
+    background: #2563eb;
+}
+
+.btn-complete {
+    background: #1d4ed8;
+    color: #ffffff;
+}
+
+.btn-complete:hover {
+    background: #2563eb;
+}
+
+.btn-done {
+    background: rgba(37,99,235,0.18);
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+.btn-done:disabled {
+    opacity: 0.9;
+    cursor: not-allowed;
+}
+
+.empty-state-card img,
+.empty-state img {
+    display: none;
+}
+
+.challenge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 28px;
+    margin-top: 42px;
 }
 
 .challenge-card {
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid #333;
-    border-radius: 25px;
-    padding: 25px;
-    box-shadow: 0 10px 0px rgba(0,0,0,0.1);
+    background: rgba(255,255,255,0.05);
+    border-radius: 28px;
+    padding: 28px;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 18px 30px rgba(0,0,0,0.15);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.challenge-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 22px 40px rgba(0,0,0,0.22);
+}
+
+.challenge-card.completed {
+    border-color: #10b981;
 }
 
 .challenge-card h3 {
-    font-size: 1.8rem;
-    margin-bottom: 10px;
+    font-size: 1.75rem;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 12px;
 }
 
 .challenge-card p {
-    font-size: 1rem;
-    color: #444;
-    margin-bottom: 5px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.8;
+    margin-bottom: 22px;
 }
 
-.category {
-    display: inline-block;
-    margin-top: 15px;
-    font-weight: 800;
+.challenge-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.badge {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 999px;
     font-size: 0.9rem;
-    text-transform: uppercase;
+    font-weight: 700;
+    border: 1px solid rgba(255,255,255,0.12);
 }
 
-/* --- RESPONSIVE --- */
+.challenge-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+.challenge-actions .btn,
+.challenge-actions button,
+.challenge-actions a {
+    display: inline-flex;
+    padding: 10px 18px;
+    font-size: 0.95rem;
+    min-height: auto;
+    width: auto;
+    flex: 0 1 auto;
+}
+
+.challenge-actions .btn-primary {
+    background: #1d4ed8;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+.challenge-actions .btn-primary:hover {
+    background: #2563eb;
+}
+
+.challenge-actions .btn-secondary {
+    background: #1d4ed8;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+.challenge-actions .btn-secondary:hover {
+    background: #2563eb;
+}
+
+.empty-state {
+    text-align: center;
+    color: #fff;
+    font-size: 1.2rem;
+    margin-top: 70px;
+    line-height: 1.8;
+}
+
+.empty-state a {
+    color: #fff;
+    text-decoration: underline;
+    font-weight: 700;
+}
+
 @media (max-width: 900px) {
     .dashboard-container { flex-direction: column; }
     .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 2px solid #333; }
-    .main-content { padding: 20px; }
+    .main-content { padding: 28px; }
+    .main-content::before { left: 0; width: 100%; }
 }
