@@ -1,21 +1,18 @@
 <?php
-require '../app/config/db.php';
-
-// Jika tombol "Selesaikan" ditekan
-if (isset($_POST['complete_challenge'])) {
-    $cid = $_POST['challenge_id'];
-    // Masukkan data ke user_challenges, jika sudah ada, update menjadi completed
-    $conn->query("INSERT INTO user_challenges (user_id, challenge_id, status) 
-                VALUES ($user_id, $cid, 'completed') 
-                ON DUPLICATE KEY UPDATE status='completed'");
+// Halaman ini dibuat sebagai redirect agar tombol/menu "Tantangan" mengarah ke halaman tantangan yang benar.
+// Sumber data & kontrol penyelesaian dikelola oleh ChallengeController (route: /challenge).
+if (!isset($_SESSION)) {
+    // jika session belum aktif, index.php biasanya sudah start; tapi amankan:
+    session_start();
 }
 
-// Ambil data challenge minggu ini dan status pengerjaannya
-$query = "SELECT c.*, uc.status 
-        FROM challenges c 
-        LEFT JOIN user_challenges uc ON c.id = uc.challenge_id AND uc.user_id = $user_id 
-        WHERE c.week = $current_week";
-$result = $conn->query($query);
+if (!isset($_SESSION['user_id'])) {
+    header('Location: /login');
+    exit;
+}
+
+header('Location: /challenge');
+exit;
 ?>
 
 <!DOCTYPE html>

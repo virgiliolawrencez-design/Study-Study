@@ -314,6 +314,11 @@ $challenges = $challenges ?? [];
             <div class="page-header">
                 <h2 class="section-title">Daftar Tantangan Minggu <?= htmlspecialchars($current_week) ?></h2>
                 <p class="page-description"><?php if ($role === 'teacher'): ?>Kelola tantangan tugas Anda atau lihat yang tersedia untuk diselesaikan.<?php else: ?>Lihat tantangan minggu ini dan selesaikan yang belum dikerjakan.<?php endif; ?></p>
+                <?php if ($role === 'teacher'): ?>
+                    <div style="margin-top: 18px;">
+                        <a href="/challenge/create" class="btn btn-primary">+ Tambah Tantangan</a>
+                    </div>
+                <?php endif; ?>
             </div>
             <div class="summary-cards">
                 <div class="card-large">
@@ -385,9 +390,7 @@ $challenges = $challenges ?? [];
                                 <?php if (($challenge['status'] ?? null) === 'completed'): ?>
                                     <button class="btn btn-done" disabled>Sudah Selesai ✓</button>
                                 <?php else: ?>
-                                    <form method="POST" action="/challenge/complete/<?= intval($challenge['id']) ?>" style="display:inline;">
-                                        <button type="submit" class="btn btn-primary">Selesaikan</button>
-                                    </form>
+                                    <a href="/challenge/<?= intval($challenge['id']) ?>" class="btn btn-primary">Selesaikan</a>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>

@@ -16,6 +16,7 @@ $router->add('GET', '/logout', 'AuthController', 'logout');
 $router->add('GET', '/challenge', 'ChallengeController', 'Challenge');
 $router->add('GET', '/challenge/create', 'ChallengeController', 'create');
 $router->add('POST', '/challenge/create', 'ChallengeController', 'store');
+$router->add('GET', '/challenge/{id}', 'ChallengeController', 'show');
 $router->add('GET', '/challenge/edit/{id}', 'ChallengeController', 'edit');
 $router->add('POST', '/challenge/edit/{id}', 'ChallengeController', 'update');
 $router->add('POST', '/challenge/delete/{id}', 'ChallengeController', 'delete');

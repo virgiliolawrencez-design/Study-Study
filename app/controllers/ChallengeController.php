@@ -14,6 +14,31 @@ class ChallengeController {
         }
     }
 
+    private function saveQuestions(int $challengeId, array $questions) {
+        $delete = $this->conn->prepare("DELETE FROM challenge_questions WHERE challenge_id = ?");
+        $delete->bind_param('i', $challengeId);
+        $delete->execute();
+
+        $insert = $this->conn->prepare("INSERT INTO challenge_questions (challenge_id, question_text, option_a, option_b, option_c, option_d, correct_option, question_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        foreach ($questions as $index => $question) {
+            $questionText = trim($question['text'] ?? '');
+            if ($questionText === '') {
+                continue;
+            }
+            $optionA = trim($question['option_a'] ?? '');
+            $optionB = trim($question['option_b'] ?? '');
+            $optionC = trim($question['option_c'] ?? '');
+            $optionD = trim($question['option_d'] ?? '');
+            $correctOption = strtoupper(trim($question['correct_option'] ?? ''));
+            if (!in_array($correctOption, ['A', 'B', 'C', 'D'], true)) {
+                $correctOption = '';
+            }
+            $order = $index + 1;
+            $insert->bind_param('issssssi', $challengeId, $questionText, $optionA, $optionB, $optionC, $optionD, $correctOption, $order);
+            $insert->execute();
+        }
+    }
+
     public function Challenge() {
         $this->ensureConnection();
         if (!isset($_SESSION['user_id'])) {
@@ -27,9 +52,8 @@ class ChallengeController {
 
         if ($role === 'teacher') {
             // Teachers see all challenges for management
-            $query = "SELECT c.*, t.username AS created_by_name FROM challenges c LEFT JOIN teachers t ON c.created_by = t.id WHERE c.week = ? ORDER BY c.week, c.id";
+            $query = "SELECT c.*, t.username AS created_by_name FROM challenges c LEFT JOIN teachers t ON c.created_by = t.id ORDER BY c.week DESC, c.id DESC";
             $stmt = $this->conn->prepare($query);
-            $stmt->bind_param('i', $current_week);
             $stmt->execute();
             $result = $stmt->get_result();
             $challenges = $result->fetch_all(MYSQLI_ASSOC);
@@ -82,6 +106,7 @@ class ChallengeController {
         $category = trim($_POST['category'] ?? '');
         $difficulty = trim($_POST['difficulty'] ?? 'Medium');
         $week = intval($_POST['week'] ?? ($GLOBALS['current_week'] ?? 1));
+        $questions = $_POST['questions'] ?? [];
         $created_by = $_SESSION['user_id'];
 
         if ($title === '') {
@@ -93,6 +118,7 @@ class ChallengeController {
         $stmt = $this->conn->prepare("INSERT INTO challenges (title, description, category, difficulty, week, created_by) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->bind_param('ssssii', $title, $description, $category, $difficulty, $week, $created_by);
         if ($stmt->execute()) {
+            $this->saveQuestions($stmt->insert_id, $questions);
             header('Location: /challenge');
             exit;
         }
@@ -120,6 +146,11 @@ class ChallengeController {
             return;
         }
 
+        $stmt = $this->conn->prepare("SELECT * FROM challenge_questions WHERE challenge_id = ? ORDER BY question_order, id");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $questions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
         $current_week = $GLOBALS['current_week'] ?? 1;
         require_once __DIR__ . '/../views/challenge/edit.php';
     }
@@ -136,6 +167,7 @@ class ChallengeController {
         $category = trim($_POST['category'] ?? '');
         $difficulty = trim($_POST['difficulty'] ?? 'Medium');
         $week = intval($_POST['week'] ?? ($GLOBALS['current_week'] ?? 1));
+        $questions = $_POST['questions'] ?? [];
 
         if ($title === '') {
             $error = 'Judul tantangan tidak boleh kosong.';
@@ -148,8 +180,9 @@ class ChallengeController {
         }
 
         $stmt = $this->conn->prepare("UPDATE challenges SET title = ?, description = ?, category = ?, difficulty = ?, week = ? WHERE id = ?");
-        $stmt->bind_param('sssiii', $title, $description, $category, $difficulty, $week, $id);
+        $stmt->bind_param('ssssii', $title, $description, $category, $difficulty, $week, $id);
         if ($stmt->execute()) {
+            $this->saveQuestions($id, $questions);
             header('Location: /challenge');
             exit;
         }
@@ -159,7 +192,47 @@ class ChallengeController {
         $stmt->bind_param('i', $id);
         $stmt->execute();
         $challenge = $stmt->get_result()->fetch_assoc();
+        $stmt = $this->conn->prepare("SELECT * FROM challenge_questions WHERE challenge_id = ? ORDER BY question_order, id");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $questions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         require_once __DIR__ . '/../views/challenge/edit.php';
+    }
+
+    public function show($id) {
+        $this->ensureConnection();
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /login');
+            exit;
+        }
+
+        $stmt = $this->conn->prepare("SELECT c.*, t.username AS created_by_name, uc.status
+            FROM challenges c
+            LEFT JOIN teachers t ON c.created_by = t.id
+            LEFT JOIN user_challenges uc ON c.id = uc.challenge_id AND uc.user_id = ?
+            WHERE c.id = ?");
+        $user_id = $_SESSION['user_id'];
+        $stmt->bind_param('ii', $user_id, $id);
+        $stmt->execute();
+        $challenge = $stmt->get_result()->fetch_assoc();
+
+        if (!$challenge) {
+            http_response_code(404);
+            echo 'Tantangan tidak ditemukan.';
+            return;
+        }
+
+        $stmt = $this->conn->prepare("SELECT q.*, u.answer AS user_answer, u.status AS user_status
+            FROM challenge_questions q
+            LEFT JOIN user_question_answers u ON q.id = u.challenge_question_id AND u.user_id = ?
+            WHERE q.challenge_id = ?
+            ORDER BY q.question_order, q.id");
+        $stmt->bind_param('ii', $user_id, $id);
+        $stmt->execute();
+        $questions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $role = $_SESSION['role'] ?? 'student';
+        require_once __DIR__ . '/../views/challenge/show.php';
     }
 
     public function delete($id) {
@@ -185,13 +258,95 @@ class ChallengeController {
         }
 
         $user_id = $_SESSION['user_id'];
+        $answers = $_POST['answer'] ?? [];
 
-        // Insert or update completion status
-        $stmt = $this->conn->prepare("INSERT INTO user_challenges (user_id, challenge_id, status) VALUES (?, ?, 'completed') ON DUPLICATE KEY UPDATE status = 'completed'");
-        $stmt->bind_param('ii', $user_id, $id);
+        $stmt = $this->conn->prepare("SELECT id, correct_option FROM challenge_questions WHERE challenge_id = ?");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $questions = $result->fetch_all(MYSQLI_ASSOC);
+
+        if (!empty($questions)) {
+            $missingAnswer = false;
+            foreach ($questions as $question) {
+                $questionId = $question['id'];
+                $provided = trim((string)($answers[$questionId] ?? ''));
+                if ($provided === '') {
+                    $missingAnswer = true;
+                    break;
+                }
+            }
+            if ($missingAnswer) {
+                header('Location: /challenge/' . intval($id) . '?error=empty');
+                exit;
+            }
+
+            $allCorrect = true;
+            $saveStmt = $this->conn->prepare("INSERT INTO user_question_answers (user_id, challenge_question_id, answer, status) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE answer = ?, status = ?");
+            foreach ($questions as $question) {
+                $questionId = $question['id'];
+                $provided = trim((string)($answers[$questionId] ?? ''));
+                $correctOption = strtoupper($question['correct_option'] ?? '');
+                $status = 'open';
+                if ($correctOption !== '') {
+                    if (strtoupper($provided) === $correctOption) {
+                        $status = 'completed';
+                    } else {
+                        $status = 'open';
+                    }
+                } else {
+                    $status = $provided === '' ? 'open' : 'completed';
+                }
+                if ($status !== 'completed') {
+                    $allCorrect = false;
+                }
+                $saveStmt->bind_param('iissss', $user_id, $questionId, $provided, $status, $provided, $status);
+                $saveStmt->execute();
+            }
+
+            $overallStatus = $allCorrect ? 'completed' : 'open';
+            $parentStmt = $this->conn->prepare("INSERT INTO user_challenges (user_id, challenge_id, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status = ?");
+            $parentStmt->bind_param('iiss', $user_id, $id, $overallStatus, $overallStatus);
+            $parentStmt->execute();
+
+            if ($allCorrect) {
+                header('Location: /challenge/' . intval($id) . '?completed=1');
+            } else {
+                header('Location: /challenge/' . intval($id) . '?error=wrong');
+            }
+            exit;
+        }
+
+        $answer = trim($_POST['answer'] ?? '');
+        $stmt = $this->conn->prepare("SELECT correct_option FROM challenges WHERE id = ?");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $challenge = $result->fetch_assoc();
+        $correct_option = $challenge['correct_option'] ?? '';
+
+        if (!empty($correct_option)) {
+            if ($answer === '') {
+                header('Location: /challenge/' . intval($id) . '?error=empty');
+                exit;
+            }
+            $status = strtoupper($answer) === strtoupper($correct_option) ? 'completed' : 'open';
+            $stmt = $this->conn->prepare("INSERT INTO user_challenges (user_id, challenge_id, status, user_answer) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE status = ?, user_answer = ?");
+            $stmt->bind_param('iissss', $user_id, $id, $status, $answer, $status, $answer);
+            $stmt->execute();
+            if ($status === 'completed') {
+                header('Location: /challenge/' . intval($id) . '?completed=1');
+            } else {
+                header('Location: /challenge/' . intval($id) . '?error=wrong');
+            }
+            exit;
+        }
+
+        $stmt = $this->conn->prepare("INSERT INTO user_challenges (user_id, challenge_id, status, user_answer) VALUES (?, ?, 'completed', ?) ON DUPLICATE KEY UPDATE status = 'completed', user_answer = ?");
+        $stmt->bind_param('iiss', $user_id, $id, $answer, $answer);
         $stmt->execute();
 
-        header('Location: /challenge');
+        header('Location: /challenge/' . intval($id) . '?completed=1');
         exit;
     }
 }
